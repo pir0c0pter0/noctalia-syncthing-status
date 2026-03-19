@@ -35,9 +35,11 @@ Item {
     }
     readonly property color iconColor: {
         if (isSelected) return Color.mOnPrimary;
-        return Color.mOnSurface;
+        return mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface;
     }
-    readonly property color badgeColor: isSelected ? Color.mOnPrimary : Color.mOnSurface
+    readonly property color badgeColor: isSelected
+        ? Color.mOnPrimary
+        : (mouseArea.containsMouse ? Color.mOnHover : Color.mOnSurface)
     readonly property color statusBadgeBg: mainInst ? mainInst.statusBadgeBackground(root.currentState) : Color.mOutline
     readonly property color statusBadgeFg: mainInst ? mainInst.statusBadgeForeground(root.currentState) : Color.mOnSurface
     readonly property string statusBadgeIcon: mainInst ? mainInst.statusBadgeIcon(root.currentState) : ""
