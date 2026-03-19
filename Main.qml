@@ -336,6 +336,33 @@ Item {
         return Color.mOutline;
     }
 
+    function statusBadgeBackground(code) {
+        if (!enabled || code === "disabled") return Color.mOutline;
+        if (code === "idle") return Color.mPrimary;
+        if (code === "syncing") return Color.mSecondary;
+        if (code === "paused") return Color.mSurfaceVariant;
+        if (code === "disconnected") return Color.mSecondary;
+        if (code === "offline" || code === "unauthorized" || code === "error") return Color.mError;
+        return Color.mOutline;
+    }
+
+    function statusBadgeForeground(code) {
+        if (!enabled || code === "disabled") return Color.mOnSurface;
+        if (code === "idle") return Color.mOnPrimary;
+        if (code === "syncing") return Color.mOnSecondary;
+        if (code === "paused") return Color.mOnSurfaceVariant;
+        if (code === "disconnected") return Color.mOnSecondary;
+        if (code === "offline" || code === "unauthorized" || code === "error") return Color.mOnError;
+        return Color.mOnSurface;
+    }
+
+    function statusBadgeIcon(code) {
+        if (!enabled || code === "disabled") return "";
+        if (code === "paused") return "player-pause";
+        if (code === "disconnected" || code === "offline" || code === "unauthorized" || code === "error") return "x";
+        return "";
+    }
+
     function badgeText() {
         if (!enabled) return "";
         if (state === "syncing") {
@@ -343,8 +370,6 @@ Item {
             if (needItems > 0) return String(needItems);
             return String(Math.max(syncingFolders, 1));
         }
-        if (state === "paused") return "P";
-        if (hasProblem) return "!";
         return "";
     }
 

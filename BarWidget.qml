@@ -26,6 +26,7 @@ Item {
 
     readonly property string badge: mainInst?.badgeText() ?? ""
     readonly property real textWidth: badgeText.implicitWidth
+    readonly property string currentState: mainInst?.enabled ? (mainInst?.state ?? "unconfigured") : "disabled"
     readonly property color capsuleBgColor: {
         if (isSelected) {
             return mouseArea.containsMouse ? Qt.darker(Color.mPrimary, 1.08) : Color.mPrimary;
@@ -34,13 +35,12 @@ Item {
     }
     readonly property color iconColor: {
         if (isSelected) return Color.mOnPrimary;
-        return mainInst ? mainInst.statusColor(mainInst.enabled ? mainInst.state : "disabled") : Color.mOnSurface;
+        return Color.mOnSurface;
     }
     readonly property color badgeColor: isSelected ? Color.mOnPrimary : Color.mOnSurface
-    readonly property color statusDotColor: {
-        if (isSelected) return Color.mOnPrimary;
-        return mainInst ? mainInst.statusColor(mainInst.enabled ? mainInst.state : "disabled") : Color.mOutline;
-    }
+    readonly property color statusBadgeBg: mainInst ? mainInst.statusBadgeBackground(root.currentState) : Color.mOutline
+    readonly property color statusBadgeFg: mainInst ? mainInst.statusBadgeForeground(root.currentState) : Color.mOnSurface
+    readonly property string statusBadgeIcon: mainInst ? mainInst.statusBadgeIcon(root.currentState) : ""
 
     implicitWidth: visualCapsule.width
     implicitHeight: visualCapsule.height
@@ -123,10 +123,18 @@ Item {
             anchors.right: parent.right
             anchors.bottomMargin: 2
             anchors.rightMargin: 2
-            width: 6
-            height: 6
-            radius: 3
-            color: root.statusDotColor
+            width: root.statusBadgeIcon ? 14 : 8
+            height: root.statusBadgeIcon ? 14 : 8
+            radius: width / 2
+            color: root.statusBadgeBg
+
+            NIcon {
+                anchors.centerIn: parent
+                visible: root.statusBadgeIcon !== ""
+                icon: root.statusBadgeIcon
+                pointSize: 8
+                color: root.statusBadgeFg
+            }
         }
     }
 

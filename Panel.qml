@@ -9,12 +9,13 @@ Item {
     property var pluginApi: null
     readonly property var geometryPlaceholder: panelContainer
     property real contentPreferredWidth: 340 * Style.uiScaleRatio
-    property real contentPreferredHeight: 380 * Style.uiScaleRatio
+    property real contentPreferredHeight: 420 * Style.uiScaleRatio
     readonly property bool allowAttach: true
 
     anchors.fill: parent
 
     readonly property var mainInst: pluginApi?.mainInstance ?? null
+    readonly property string currentState: mainInst?.enabled ? (mainInst?.state ?? "unconfigured") : "disabled"
 
     property int _langVersion: 0
 
@@ -65,7 +66,7 @@ Item {
                         NIcon {
                             icon: "exchange"
                             pointSize: Style.fontSizeL
-                            color: mainInst ? mainInst.statusColor(mainInst.enabled ? mainInst.state : "disabled") : Color.mOutline
+                            color: Color.mPrimary
                         }
 
                         ColumnLayout {
@@ -114,16 +115,24 @@ Item {
                         spacing: Style.marginS
 
                         Rectangle {
-                            width: 10
-                            height: 10
-                            radius: 5
-                            color: mainInst ? mainInst.statusColor(mainInst.enabled ? mainInst.state : "disabled") : Color.mOutline
+                            width: (mainInst?.statusBadgeIcon(root.currentState) ?? "") !== "" ? 18 : 10
+                            height: (mainInst?.statusBadgeIcon(root.currentState) ?? "") !== "" ? 18 : 10
+                            radius: width / 2
+                            color: mainInst ? mainInst.statusBadgeBackground(root.currentState) : Color.mOutline
+
+                            NIcon {
+                                anchors.centerIn: parent
+                                visible: (mainInst?.statusBadgeIcon(root.currentState) ?? "") !== ""
+                                icon: mainInst?.statusBadgeIcon(root.currentState) ?? ""
+                                pointSize: 9
+                                color: mainInst ? mainInst.statusBadgeForeground(root.currentState) : Color.mOnSurface
+                            }
                         }
 
                         NText {
                             text: mainInst?.statusSummary() ?? ""
                             Layout.fillWidth: true
-                            wrapMode: Text.Wrap
+                            wrapMode: Text.WordWrap
                         }
                     }
 
@@ -255,8 +264,9 @@ Item {
                         }
 
                         NText {
+                            Layout.fillWidth: true
                             text: mainInst?.detail ?? ""
-                            wrapMode: Text.Wrap
+                            wrapMode: Text.WrapAnywhere
                             color: mainInst?.hasProblem ? Color.mError : Qt.alpha(Color.mOnSurface, 0.75)
                         }
                     }
@@ -266,29 +276,35 @@ Item {
                         spacing: 4
 
                         NText {
+                            Layout.fillWidth: true
                             text: t("panel.last-check") + ": " + (mainInst?.formatCheckedAt(mainInst?.checkedAt ?? "") ?? "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
+                            wrapMode: Text.WordWrap
                         }
 
                         NText {
+                            Layout.fillWidth: true
                             text: t("panel.url") + ": " + (mainInst?.resolvedUrl || "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
-                            elide: Text.ElideRight
+                            wrapMode: Text.WrapAnywhere
                         }
 
                         NText {
+                            Layout.fillWidth: true
                             text: t("panel.config-path") + ": " + (mainInst?.resolvedConfigPath || "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
-                            elide: Text.ElideMiddle
+                            wrapMode: Text.WrapAnywhere
                         }
 
                         NText {
+                            Layout.fillWidth: true
                             text: t("panel.api-source") + ": " + (mainInst ? mainInst.sourceLabel(mainInst.apiKeySource) : "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
+                            wrapMode: Text.WordWrap
                         }
                     }
 
@@ -310,7 +326,7 @@ Item {
                                 required property var modelData
                                 Layout.fillWidth: true
                                 text: modelData.message
-                                wrapMode: Text.Wrap
+                                wrapMode: Text.WrapAnywhere
                                 pointSize: Style.fontSizeS
                                 color: Qt.alpha(Color.mOnSurface, 0.75)
                             }
