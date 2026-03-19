@@ -6,7 +6,7 @@
   "author": "Pir0c0pter0",
   "license": "MIT",
   "repository": "https://github.com/pir0c0pter0/noctalia-syncthing-status",
-  "description": "Shows Syncthing sync, disconnected, paused and offline status in Noctalia",
+  "description": "Theme-aware Syncthing status plugin for Noctalia on Niri with bar and panel integration",
   "tags": ["Bar", "Panel", "System", "Utility"],
   "entryPoints": {
     "main": "Main.qml",
