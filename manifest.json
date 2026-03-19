@@ -1,0 +1,33 @@
+{
+  "id": "noctalia-syncthing-status",
+  "name": "Syncthing Status",
+  "version": "1.0.0",
+  "minNoctaliaVersion": "4.4.0",
+  "author": "Pir0c0pter0",
+  "license": "MIT",
+  "repository": "https://github.com/pir0c0pter0/noctalia-syncthing-status",
+  "description": "Shows Syncthing sync, disconnected, paused and offline status in Noctalia",
+  "tags": ["Bar", "Panel", "System", "Utility"],
+  "entryPoints": {
+    "main": "Main.qml",
+    "barWidget": "BarWidget.qml",
+    "panel": "Panel.qml",
+    "settings": "Settings.qml"
+  },
+  "dependencies": {
+    "plugins": []
+  },
+  "metadata": {
+    "commandPrefix": "syncthing-status",
+    "defaultSettings": {
+      "enabled": true,
+      "apiUrl": "",
+      "apiKey": "",
+      "configPath": "",
+      "verifyTls": false,
+      "pollIntervalMs": 10000,
+      "folderIds": [],
+      "language": "auto"
+    }
+  }
+}
