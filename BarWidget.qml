@@ -105,7 +105,7 @@ Item {
             spacing: badge ? 4 : 0
 
             NIcon {
-                icon: "exchange"
+                icon: "arrows-exchange"
                 opacity: mainInst?.enabled ? 0.9 : 0.35
                 color: root.iconColor
             }

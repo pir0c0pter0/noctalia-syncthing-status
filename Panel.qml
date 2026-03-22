@@ -64,7 +64,7 @@ Item {
                         spacing: Style.marginS
 
                         NIcon {
-                            icon: "exchange"
+                            icon: "arrows-exchange"
                             pointSize: Style.fontSizeL
                             color: Color.mPrimary
                         }
