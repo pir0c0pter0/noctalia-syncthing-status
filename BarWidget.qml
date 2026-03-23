@@ -50,8 +50,11 @@ Item {
 
     function tooltipText() {
         if (!mainInst) return "Syncthing";
-        return "Syncthing - " + mainInst.stateLabel(mainInst.enabled ? mainInst.state : "disabled")
-            + "\n" + mainInst.statusSummary();
+        const stateCode = mainInst.enabled ? mainInst.state : "disabled";
+        return pluginApi?.tr("bar.tooltip", {
+            "state": mainInst.stateLabel(stateCode),
+            "summary": mainInst.statusSummary()
+        });
     }
 
     NPopupContextMenu {

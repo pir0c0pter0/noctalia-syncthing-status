@@ -27,7 +27,8 @@
         "enable": "启用 Syncthing Status",
         "disable": "禁用 Syncthing Status",
         "refresh": "立即刷新",
-        "settings": "设置"
+        "settings": "设置",
+        "tooltip": "Syncthing - {state}\n{summary}"
     },
     "panel": {
         "title": "Syncthing",

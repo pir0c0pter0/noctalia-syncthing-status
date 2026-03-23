@@ -27,7 +27,8 @@
         "enable": "Включить Syncthing Status",
         "disable": "Отключить Syncthing Status",
         "refresh": "Обновить сейчас",
-        "settings": "Настройки"
+        "settings": "Настройки",
+        "tooltip": "Syncthing - {state}\n{summary}"
     },
     "panel": {
         "title": "Syncthing",

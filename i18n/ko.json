@@ -27,7 +27,8 @@
         "enable": "Syncthing Status 활성화",
         "disable": "Syncthing Status 비활성화",
         "refresh": "지금 새로고침",
-        "settings": "설정"
+        "settings": "설정",
+        "tooltip": "Syncthing - {state}\n{summary}"
     },
     "panel": {
         "title": "Syncthing",
