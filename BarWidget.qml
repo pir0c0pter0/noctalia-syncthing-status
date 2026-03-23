@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import qs.Commons
 import qs.Widgets
@@ -104,10 +105,20 @@ Item {
             anchors.centerIn: parent
             spacing: badge ? 4 : 0
 
-            NIcon {
-                icon: "arrows-exchange"
+            Image {
+                width: root.capsuleHeight * 0.55
+                height: root.capsuleHeight * 0.55
+                source: Qt.resolvedUrl("icon.svg")
+                sourceSize: Qt.size(width, height)
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
                 opacity: mainInst?.enabled ? 0.9 : 0.35
-                color: root.iconColor
+                layer.enabled: true
+                layer.effect: MultiEffect {
+                    colorization: 1.0
+                    colorizationColor: root.iconColor
+                }
             }
 
             NText {

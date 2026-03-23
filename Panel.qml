@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import qs.Commons
 import qs.Widgets
 
@@ -63,10 +64,19 @@ Item {
                         Layout.fillWidth: true
                         spacing: Style.marginS
 
-                        NIcon {
-                            icon: "arrows-exchange"
-                            pointSize: Style.fontSizeL
-                            color: Color.mPrimary
+                        Image {
+                            width: 22 * Style.uiScaleRatio
+                            height: 22 * Style.uiScaleRatio
+                            source: Qt.resolvedUrl("icon.svg")
+                            sourceSize: Qt.size(width, height)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                colorization: 1.0
+                                colorizationColor: Color.mPrimary
+                            }
                         }
 
                         ColumnLayout {
