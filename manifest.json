@@ -5,7 +5,7 @@
   "minNoctaliaVersion": "4.4.0",
   "author": "Pir0c0pter0",
   "license": "MIT",
-  "repository": "https://github.com/pir0c0pter0/noctalia-syncthing-status",
+  "repository": "https://github.com/noctalia-dev/noctalia-plugins",
   "description": "Theme-aware Syncthing status plugin for Noctalia on Niri with bar and panel integration",
   "tags": ["Bar", "Panel", "System", "Utility"],
   "entryPoints": {
@@ -18,7 +18,6 @@
     "plugins": []
   },
   "metadata": {
-    "commandPrefix": "syncthing-status",
     "defaultSettings": {
       "enabled": true,
       "apiUrl": "",
