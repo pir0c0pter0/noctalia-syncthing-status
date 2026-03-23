@@ -432,7 +432,7 @@ Item {
             snapshot = parsed;
             parsedCurrentRun = true;
         } catch (error) {
-            console.warn("[syncthing-status] failed to parse helper JSON:", error);
+            console.warn("[syncthing-status] helper output is not valid JSON (", text.length, "bytes):", error);
         }
     }
 

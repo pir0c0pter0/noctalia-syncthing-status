@@ -158,7 +158,9 @@ def request_json(runtime: dict, path: str, *, auth: bool = True, params: dict | 
 
     context = None
     if url.startswith("https://") and not runtime["verifyTls"]:
-        context = ssl._create_unverified_context()
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
 
     request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=runtime["timeout"], context=context) as response:
@@ -232,34 +234,27 @@ def classify_snapshot(snapshot: dict) -> dict:
     devices = snapshot["devices"]
 
     if not folders:
-        snapshot["state"] = "unconfigured"
-        if not snapshot["detail"]:
-            snapshot["detail"] = "No monitored folders are configured."
-        return snapshot
+        detail = snapshot["detail"] or "No monitored folders are configured."
+        return {**snapshot, "state": "unconfigured", "detail": detail}
 
     if totals["pausedFolders"] == totals["monitoredFolders"]:
-        snapshot["state"] = "paused"
-        return snapshot
+        return {**snapshot, "state": "paused"}
 
     if totals["erroredFolders"] > 0:
-        snapshot["state"] = "error"
-        if not snapshot["detail"]:
-            snapshot["detail"] = "One or more monitored folders reported errors."
-        return snapshot
+        detail = snapshot["detail"] or "One or more monitored folders reported errors."
+        return {**snapshot, "state": "error", "detail": detail}
 
     if totals["syncingFolders"] > 0 or totals["needItems"] > 0 or totals["needBytes"] > 0:
-        snapshot["state"] = "syncing"
-        return snapshot
+        return {**snapshot, "state": "syncing"}
 
     if devices["configured"] > 0 and devices["connected"] == 0 and devices["paused"] < devices["configured"]:
-        snapshot["state"] = "disconnected"
-        return snapshot
+        return {**snapshot, "state": "disconnected"}
 
-    snapshot["state"] = "idle"
-    return snapshot
+    return {**snapshot, "state": "idle"}
 
 
-def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
+def _check_connectivity(runtime: dict, xml_config: dict) -> dict | None:
+    """Verify Syncthing is reachable and API key is available."""
     if not runtime["baseUrl"]:
         return error_snapshot(
             "unconfigured",
@@ -293,11 +288,18 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
             xml_config,
         )
 
+    return None
+
+
+def _fetch_core_data(runtime: dict, xml_config: dict) -> tuple | dict:
+    """Fetch core API endpoints. Returns data tuple or error_snapshot dict."""
     try:
-        system_status = request_json(runtime, "/rest/system/status")
-        config = request_json(runtime, "/rest/config")
-        connections = request_json(runtime, "/rest/system/connections")
-        system_errors = request_json(runtime, "/rest/system/error")
+        return (
+            request_json(runtime, "/rest/system/status"),
+            request_json(runtime, "/rest/config"),
+            request_json(runtime, "/rest/system/connections"),
+            request_json(runtime, "/rest/system/error"),
+        )
     except urllib.error.HTTPError as exc:
         if exc.code in (401, 403):
             return error_snapshot("unauthorized", "Syncthing rejected the API key.", runtime, xml_config)
@@ -314,33 +316,27 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
     except TimeoutError:
         return error_snapshot("offline", "Syncthing API request timed out.", runtime, xml_config)
 
-    config_folders = []
+
+def _parse_config_folders(config: dict) -> list:
+    """Parse and sort folder list from Syncthing config."""
+    folders = []
     for folder in config.get("folders", []):
         folder_id = (folder.get("id") or "").strip()
         if not folder_id:
             continue
-        config_folders.append(
+        folders.append(
             {
                 "id": folder_id,
                 "label": (folder.get("label") or "").strip() or folder_id,
                 "paused": bool(folder.get("paused", False)),
             }
         )
-    config_folders.sort(key=lambda item: item["label"].lower())
+    folders.sort(key=lambda item: item["label"].lower())
+    return folders
 
-    monitored_ids = set(runtime["monitoredIds"])
-    monitored_folders = [
-        folder for folder in config_folders if not monitored_ids or folder["id"] in monitored_ids
-    ]
-    if monitored_ids and not monitored_folders:
-        return error_snapshot(
-            "unconfigured",
-            "Selected folder IDs were not found in Syncthing.",
-            runtime,
-            xml_config,
-            available_folders=config_folders,
-        )
 
+def _count_devices(config: dict, system_status: dict, connections: dict) -> dict:
+    """Count configured, connected, and paused remote devices."""
     my_id = (system_status.get("myID") or "").strip()
     connection_map = connections.get("connections", {}) if isinstance(connections, dict) else {}
     remote_devices = [
@@ -349,24 +345,29 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
         if isinstance(device, dict) and (device.get("deviceID") or "") != my_id
     ]
 
-    configured_devices = 0
-    connected_devices = 0
-    paused_devices = 0
+    configured = 0
+    connected = 0
+    paused = 0
     for device in remote_devices:
         device_id = (device.get("deviceID") or "").strip()
         if not device_id:
             continue
-        configured_devices += 1
+        configured += 1
         info = connection_map.get(device_id, {})
         if info.get("paused"):
-            paused_devices += 1
+            paused += 1
         elif info.get("connected"):
-            connected_devices += 1
+            connected += 1
 
-    folder_summaries = []
+    return {"configured": configured, "connected": connected, "paused": paused}
+
+
+def _collect_folder_summaries(runtime: dict, monitored_folders: list) -> list:
+    """Fetch per-folder status and build summaries."""
+    summaries = []
     for folder in monitored_folders:
         if folder.get("paused"):
-            folder_summaries.append(
+            summaries.append(
                 {
                     "id": folder["id"],
                     "label": folder["label"],
@@ -387,21 +388,52 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
             status = {"state": "error", "error": f"HTTP {exc.code} while reading folder status."}
         except (urllib.error.URLError, TimeoutError, ssl.SSLError) as exc:
             status = {"state": "error", "error": f"Folder status request failed: {exc}"}
-        folder_summaries.append(summarize_folder(folder, status))
+        summaries.append(summarize_folder(folder, status))
+    return summaries
 
-    recent_errors = system_errors.get("errors") if isinstance(system_errors, dict) else []
-    if recent_errors is None:
-        recent_errors = []
-    if not isinstance(recent_errors, list):
-        recent_errors = []
-    recent_errors = [
+
+def _parse_recent_errors(system_errors: dict) -> list:
+    """Extract and clean recent error messages."""
+    raw = system_errors.get("errors") if isinstance(system_errors, dict) else []
+    if raw is None or not isinstance(raw, list):
+        return []
+    return [
         {
             "when": (item.get("when") or "").strip(),
             "message": (item.get("message") or "").strip(),
         }
-        for item in recent_errors
+        for item in raw
         if isinstance(item, dict) and (item.get("message") or "").strip()
     ][:5]
+
+
+def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
+    error = _check_connectivity(runtime, xml_config)
+    if error:
+        return error
+
+    result = _fetch_core_data(runtime, xml_config)
+    if not isinstance(result, tuple):
+        return result
+    system_status, config, connections, system_errors = result
+
+    config_folders = _parse_config_folders(config)
+    monitored_ids = set(runtime["monitoredIds"])
+    monitored_folders = [
+        folder for folder in config_folders if not monitored_ids or folder["id"] in monitored_ids
+    ]
+    if monitored_ids and not monitored_folders:
+        return error_snapshot(
+            "unconfigured",
+            "Selected folder IDs were not found in Syncthing.",
+            runtime,
+            xml_config,
+            available_folders=config_folders,
+        )
+
+    devices = _count_devices(config, system_status, connections)
+    folder_summaries = _collect_folder_summaries(runtime, monitored_folders)
+    recent_errors = _parse_recent_errors(system_errors)
 
     snapshot = {
         "state": "unknown",
@@ -411,18 +443,14 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
             **runtime["sources"],
             "resolvedUrl": runtime["baseUrl"],
         },
-        "devices": {
-            "configured": configured_devices,
-            "connected": connected_devices,
-            "paused": paused_devices,
-        },
+        "devices": devices,
         "totals": {
             "monitoredFolders": len(folder_summaries),
-            "pausedFolders": sum(1 for folder in folder_summaries if folder["state"] == "paused"),
-            "syncingFolders": sum(1 for folder in folder_summaries if folder["state"] == "syncing"),
-            "erroredFolders": sum(1 for folder in folder_summaries if folder["state"] == "error"),
-            "needItems": sum(folder["needItems"] for folder in folder_summaries),
-            "needBytes": sum(folder["needBytes"] for folder in folder_summaries),
+            "pausedFolders": sum(1 for f in folder_summaries if f["state"] == "paused"),
+            "syncingFolders": sum(1 for f in folder_summaries if f["state"] == "syncing"),
+            "erroredFolders": sum(1 for f in folder_summaries if f["state"] == "error"),
+            "needItems": sum(f["needItems"] for f in folder_summaries),
+            "needBytes": sum(f["needBytes"] for f in folder_summaries),
         },
         "folders": folder_summaries,
         "availableFolders": config_folders,
@@ -430,7 +458,7 @@ def fetch_snapshot(runtime: dict, xml_config: dict) -> dict:
     }
 
     if recent_errors and snapshot["totals"]["erroredFolders"] == 0 and not snapshot["detail"]:
-        snapshot["detail"] = recent_errors[0]["message"]
+        snapshot = {**snapshot, "detail": recent_errors[0]["message"]}
 
     return classify_snapshot(snapshot)
 

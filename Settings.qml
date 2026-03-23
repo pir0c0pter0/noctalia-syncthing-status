@@ -60,8 +60,12 @@ ColumnLayout {
 
     function saveSettings(triggerRefresh) {
         if (!pluginApi) return;
+        let url = valueApiUrl.trim();
+        if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "http://" + url;
+        }
         pluginApi.pluginSettings.enabled = valueEnabled;
-        pluginApi.pluginSettings.apiUrl = valueApiUrl.trim();
+        pluginApi.pluginSettings.apiUrl = url;
         pluginApi.pluginSettings.apiKey = valueApiKey.trim();
         pluginApi.pluginSettings.configPath = valueConfigPath.trim();
         pluginApi.pluginSettings.verifyTls = valueVerifyTls;
@@ -456,6 +460,11 @@ ColumnLayout {
             text: t("settings.developer")
             wrapMode: Text.Wrap
             color: Qt.alpha(Color.mOnSurface, 0.75)
+        }
+
+        NText {
+            text: "v" + (pluginApi?.manifest?.version ?? "1.0.0")
+            color: Qt.alpha(Color.mOnSurface, 0.5)
         }
 
         NText {
