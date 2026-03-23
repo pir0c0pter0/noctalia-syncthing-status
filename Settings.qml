@@ -15,7 +15,6 @@ ColumnLayout {
     property string valueConfigPath: pluginApi?.pluginSettings?.configPath ?? ""
     property bool valueVerifyTls: pluginApi?.pluginSettings?.verifyTls ?? false
     property int valuePollIntervalMs: pluginApi?.pluginSettings?.pollIntervalMs ?? 10000
-    property string valueLanguage: pluginApi?.pluginSettings?.language ?? "auto"
     property var valueFolderIds: {
         const raw = pluginApi?.pluginSettings?.folderIds ?? [];
         try {
@@ -25,22 +24,12 @@ ColumnLayout {
         }
     }
 
-    property int _langVersion: 0
-
-    Connections {
-        target: pluginApi?.mainInstance ?? null
-        function onTranslationVersionChanged() {
-            root._langVersion++;
-        }
-    }
-
-    function t(key) {
-        if (_langVersion < 0) return undefined;
-        return pluginApi?.mainInstance?.translate(key);
+    function tr(key) {
+        return pluginApi?.tr(key);
     }
 
     function sourceLabel(code) {
-        return pluginApi?.mainInstance?.sourceLabel(code) ?? code;
+        return mainInst?.sourceLabel(code) ?? code;
     }
 
     function isFolderSelected(folderId) {
@@ -71,74 +60,18 @@ ColumnLayout {
         pluginApi.pluginSettings.verifyTls = valueVerifyTls;
         pluginApi.pluginSettings.pollIntervalMs = valuePollIntervalMs;
         pluginApi.pluginSettings.folderIds = Array.from(valueFolderIds);
-        pluginApi.pluginSettings.language = valueLanguage;
         pluginApi.saveSettings();
-        pluginApi?.mainInstance?.reloadLanguage(valueLanguage);
         if (triggerRefresh) {
-            pluginApi?.mainInstance?.requestPoll(true);
+            mainInst?.requestPoll(true);
         }
     }
 
     spacing: Style.marginM
 
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: Style.marginS
-
-        NLabel {
-            label: t("settings.language")
-            description: t("settings.language-desc")
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Style.marginS
-
-            Repeater {
-                model: ["auto", "en", "pt"]
-
-                delegate: Rectangle {
-                    required property string modelData
-                    readonly property string langCode: modelData
-                    readonly property bool isSelected: root.valueLanguage === langCode
-                    readonly property string langLabel: {
-                        if (langCode === "auto") return root.t("settings.lang-auto");
-                        if (langCode === "en") return root.t("settings.lang-en");
-                        return root.t("settings.lang-pt");
-                    }
-
-                    Layout.fillWidth: true
-                    implicitHeight: 32
-                    radius: Style.iRadiusM
-                    color: isSelected ? Qt.alpha(Color.mPrimary, 0.15) : Color.mSurfaceVariant
-                    border.color: isSelected ? Color.mPrimary : (langMouse.containsMouse ? Color.mOutline : "transparent")
-                    border.width: isSelected ? 2 : 1
-
-                    NText {
-                        anchors.centerIn: parent
-                        text: parent.langLabel
-                        font.bold: parent.isSelected
-                        color: parent.isSelected ? Color.mPrimary : Color.mOnSurface
-                    }
-
-                    MouseArea {
-                        id: langMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.valueLanguage = parent.langCode;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     NToggle {
         Layout.fillWidth: true
-        label: t("settings.enabled")
-        description: t("settings.enabled-desc")
+        label: tr("settings.enabled")
+        description: tr("settings.enabled-desc")
         checked: root.valueEnabled
         onToggled: checked => root.valueEnabled = checked
     }
@@ -148,8 +81,8 @@ ColumnLayout {
         spacing: Style.marginS
 
         NLabel {
-            label: t("settings.url")
-            description: t("settings.url-desc")
+            label: tr("settings.url")
+            description: tr("settings.url-desc")
         }
 
         Rectangle {
@@ -187,8 +120,8 @@ ColumnLayout {
         spacing: Style.marginS
 
         NLabel {
-            label: t("settings.api-key")
-            description: t("settings.api-key-desc")
+            label: tr("settings.api-key")
+            description: tr("settings.api-key-desc")
         }
 
         Rectangle {
@@ -227,8 +160,8 @@ ColumnLayout {
         spacing: Style.marginS
 
         NLabel {
-            label: t("settings.config-path")
-            description: t("settings.config-path-desc")
+            label: tr("settings.config-path")
+            description: tr("settings.config-path-desc")
         }
 
         Rectangle {
@@ -263,8 +196,8 @@ ColumnLayout {
 
     NToggle {
         Layout.fillWidth: true
-        label: t("settings.verify-tls")
-        description: t("settings.verify-tls-desc")
+        label: tr("settings.verify-tls")
+        description: tr("settings.verify-tls-desc")
         checked: root.valueVerifyTls
         onToggled: checked => root.valueVerifyTls = checked
     }
@@ -274,8 +207,8 @@ ColumnLayout {
         spacing: Style.marginS
 
         NLabel {
-            label: t("settings.poll-interval") + ": " + Math.round(root.valuePollIntervalMs / 1000) + "s"
-            description: t("settings.poll-interval-desc")
+            label: (tr("settings.poll-interval") ?? "Poll interval") + ": " + Math.round(root.valuePollIntervalMs / 1000) + "s"
+            description: tr("settings.poll-interval-desc")
         }
 
         NSlider {
@@ -293,8 +226,8 @@ ColumnLayout {
         spacing: Style.marginS
 
         NLabel {
-            label: t("settings.folders")
-            description: t("settings.folders-desc")
+            label: tr("settings.folders")
+            description: tr("settings.folders-desc")
         }
 
         Flow {
@@ -334,7 +267,7 @@ ColumnLayout {
         }
 
         NText {
-            text: t("settings.no-folders")
+            text: tr("settings.no-folders")
             visible: (mainInst?.availableFolders?.length ?? 0) === 0
             wrapMode: Text.Wrap
             color: Qt.alpha(Color.mOnSurface, 0.65)
@@ -354,7 +287,7 @@ ColumnLayout {
             NText {
                 id: saveLabel
                 anchors.centerIn: parent
-                text: t("settings.save")
+                text: tr("settings.save")
                 color: Color.mOnPrimary
             }
 
@@ -365,7 +298,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     root.saveSettings(false);
-                    saveStatus.text = root.t("settings.saved");
+                    saveStatus.text = tr("settings.saved") ?? "Saved";
                     saveStatusTimer.restart();
                 }
             }
@@ -382,7 +315,7 @@ ColumnLayout {
             NText {
                 id: refreshLabel
                 anchors.centerIn: parent
-                text: t("settings.refresh")
+                text: tr("settings.refresh")
             }
 
             MouseArea {
@@ -392,7 +325,7 @@ ColumnLayout {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     root.saveSettings(true);
-                    saveStatus.text = root.t("settings.saved");
+                    saveStatus.text = tr("settings.saved") ?? "Saved";
                     saveStatusTimer.restart();
                 }
             }
@@ -417,7 +350,7 @@ ColumnLayout {
         spacing: 4
 
         NText {
-            text: t("settings.status")
+            text: tr("settings.status")
             font.bold: true
         }
 
@@ -433,14 +366,14 @@ ColumnLayout {
         }
 
         NText {
-            text: t("panel.url") + ": " + (mainInst?.resolvedUrl || "-")
+            text: (tr("panel.url") ?? "URL") + ": " + (mainInst?.resolvedUrl || "-")
             pointSize: Style.fontSizeS
             color: Qt.alpha(Color.mOnSurface, 0.6)
             elide: Text.ElideRight
         }
 
         NText {
-            text: t("panel.api-source") + ": " + root.sourceLabel(mainInst?.apiKeySource ?? "none")
+            text: (tr("panel.api-source") ?? "API") + ": " + root.sourceLabel(mainInst?.apiKeySource ?? "none")
             pointSize: Style.fontSizeS
             color: Qt.alpha(Color.mOnSurface, 0.6)
         }
@@ -452,12 +385,12 @@ ColumnLayout {
         spacing: 4
 
         NText {
-            text: t("settings.about")
+            text: tr("settings.about")
             font.bold: true
         }
 
         NText {
-            text: t("settings.developer")
+            text: tr("settings.developer")
             wrapMode: Text.Wrap
             color: Qt.alpha(Color.mOnSurface, 0.75)
         }
@@ -465,12 +398,6 @@ ColumnLayout {
         NText {
             text: "v" + (pluginApi?.manifest?.version ?? "1.0.0")
             color: Qt.alpha(Color.mOnSurface, 0.5)
-        }
-
-        NText {
-            text: t("settings.translation-mode")
-            wrapMode: Text.Wrap
-            color: Qt.alpha(Color.mOnSurface, 0.6)
         }
     }
 }

@@ -59,17 +59,17 @@ Item {
 
         model: [
             {
-                "label": mainInst?.enabled ? mainInst?.t("bar.disable") : mainInst?.t("bar.enable"),
+                "label": mainInst?.enabled ? pluginApi?.tr("bar.disable") : pluginApi?.tr("bar.enable"),
                 "action": "toggle",
                 "icon": mainInst?.enabled ? "player-pause" : "player-play"
             },
             {
-                "label": mainInst?.t("bar.refresh"),
+                "label": pluginApi?.tr("bar.refresh"),
                 "action": "refresh",
                 "icon": "refresh"
             },
             {
-                "label": mainInst?.t("bar.settings"),
+                "label": pluginApi?.tr("bar.settings"),
                 "action": "settings",
                 "icon": "settings"
             }

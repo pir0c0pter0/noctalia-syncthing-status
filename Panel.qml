@@ -18,24 +18,14 @@ Item {
     readonly property var mainInst: pluginApi?.mainInstance ?? null
     readonly property string currentState: mainInst?.enabled ? (mainInst?.state ?? "unconfigured") : "disabled"
 
-    property int _langVersion: 0
-
-    Connections {
-        target: mainInst
-        function onTranslationVersionChanged() {
-            root._langVersion++;
-        }
-    }
-
-    function t(key) {
-        if (_langVersion < 0) return undefined;
-        return mainInst?.translate(key);
+    function tr(key) {
+        return pluginApi?.tr(key);
     }
 
     function folderStateText(folder) {
         if (!mainInst) return "";
         if (folder.state === "syncing" && folder.needItems > 0) {
-            return t("panel.folder-state").arg(mainInst.stateLabel(folder.state)).arg(folder.needItems);
+            return (tr("panel.folder-state") ?? "%1 (%2)").arg(mainInst.stateLabel(folder.state)).arg(folder.needItems);
         }
         return mainInst.stateLabel(folder.state);
     }
@@ -84,7 +74,7 @@ Item {
                             spacing: 2
 
                             NText {
-                                text: t("panel.title")
+                                text: tr("panel.title")
                                 pointSize: Style.fontSizeL
                                 font.bold: true
                                 color: Color.mOnSurface
@@ -106,7 +96,7 @@ Item {
                             NText {
                                 id: refreshLabel
                                 anchors.centerIn: parent
-                                text: t("panel.refresh")
+                                text: tr("panel.refresh")
                                 color: Color.mOnPrimary
                             }
 
@@ -155,15 +145,15 @@ Item {
                         Repeater {
                             model: [
                                 {
-                                    "label": t("panel.devices"),
+                                    "label": tr("panel.devices"),
                                     "value": (mainInst?.connectedDevices ?? 0) + "/" + (mainInst?.configuredDevices ?? 0)
                                 },
                                 {
-                                    "label": t("panel.folders"),
+                                    "label": tr("panel.folders"),
                                     "value": String(mainInst?.monitoredFolders ?? 0)
                                 },
                                 {
-                                    "label": t("panel.pending"),
+                                    "label": tr("panel.pending"),
                                     "value": (mainInst?.needItems ?? 0) > 0
                                         ? String(mainInst?.needItems ?? 0)
                                         : (mainInst ? mainInst.formatBytes(mainInst.needBytes) : "0 B")
@@ -205,7 +195,7 @@ Item {
                         spacing: Style.marginS
 
                         NText {
-                            text: t("panel.folders")
+                            text: tr("panel.folders")
                             font.bold: true
                             color: Color.mOnSurface
                         }
@@ -257,7 +247,7 @@ Item {
                         }
 
                         NText {
-                            text: t("panel.no-folders")
+                            text: tr("panel.no-folders")
                             visible: (mainInst?.folders?.length ?? 0) === 0
                             color: Qt.alpha(Color.mOnSurface, 0.6)
                         }
@@ -269,7 +259,7 @@ Item {
                         visible: !!(mainInst?.detail ?? "")
 
                         NText {
-                            text: t("panel.details")
+                            text: tr("panel.details")
                             font.bold: true
                         }
 
@@ -287,7 +277,7 @@ Item {
 
                         NText {
                             Layout.fillWidth: true
-                            text: t("panel.last-check") + ": " + (mainInst?.formatCheckedAt(mainInst?.checkedAt ?? "") ?? "-")
+                            text: tr("panel.last-check") + ": " + (mainInst?.formatCheckedAt(mainInst?.checkedAt ?? "") ?? "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
                             wrapMode: Text.WordWrap
@@ -295,7 +285,7 @@ Item {
 
                         NText {
                             Layout.fillWidth: true
-                            text: t("panel.url") + ": " + (mainInst?.resolvedUrl || "-")
+                            text: tr("panel.url") + ": " + (mainInst?.resolvedUrl || "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
                             wrapMode: Text.WrapAnywhere
@@ -303,7 +293,7 @@ Item {
 
                         NText {
                             Layout.fillWidth: true
-                            text: t("panel.config-path") + ": " + (mainInst?.resolvedConfigPath || "-")
+                            text: tr("panel.config-path") + ": " + (mainInst?.resolvedConfigPath || "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
                             wrapMode: Text.WrapAnywhere
@@ -311,7 +301,7 @@ Item {
 
                         NText {
                             Layout.fillWidth: true
-                            text: t("panel.api-source") + ": " + (mainInst ? mainInst.sourceLabel(mainInst.apiKeySource) : "-")
+                            text: tr("panel.api-source") + ": " + (mainInst ? mainInst.sourceLabel(mainInst.apiKeySource) : "-")
                             pointSize: Style.fontSizeS
                             color: Qt.alpha(Color.mOnSurface, 0.65)
                             wrapMode: Text.WordWrap
@@ -324,7 +314,7 @@ Item {
                         visible: (mainInst?.recentErrors?.length ?? 0) > 0
 
                         NText {
-                            text: t("panel.recent-errors")
+                            text: tr("panel.recent-errors")
                             font.bold: true
                             color: Color.mOnSurface
                         }

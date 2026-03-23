@@ -26,8 +26,7 @@
       "configPath": "",
       "verifyTls": false,
       "pollIntervalMs": 10000,
-      "folderIds": [],
-      "language": "auto"
+      "folderIds": []
     }
   }
 }
