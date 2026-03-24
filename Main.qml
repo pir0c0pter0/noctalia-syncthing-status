@@ -223,7 +223,7 @@ Item {
             snapshot = parsed;
             parsedCurrentRun = true;
         } catch (error) {
-            console.warn("[syncthing-status] helper output is not valid JSON (", text.length, "bytes):", error);
+            Logger.w("[syncthing-status] helper output is not valid JSON (", text.length, "bytes):", error);
         }
     }
 
@@ -312,14 +312,14 @@ Item {
             onStreamFinished: {
                 root.lastStderr = text.trim();
                 if (root.lastStderr) {
-                    console.warn("[syncthing-status]", root.lastStderr);
+                    Logger.w("[syncthing-status]", root.lastStderr);
                 }
             }
         }
     }
 
     IpcHandler {
-        target: "plugin:noctalia-syncthing-status"
+        target: "plugin:syncthing-status"
 
         function refresh() {
             root.requestPoll(true);

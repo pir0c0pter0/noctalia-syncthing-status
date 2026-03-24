@@ -1,6 +1,6 @@
-# noctalia-syncthing-status
+# syncthing-status
 
-Syncthing status plugin for Noctalia on Niri.
+Syncthing status plugin for Noctalia.
 
 ## Features
 
